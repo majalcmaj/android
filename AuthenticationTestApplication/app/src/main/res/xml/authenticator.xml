@@ -1,0 +1,6 @@
+<account-authenticator xmlns:android="http://schemas.android.com/apk/res/android"
+    android:accountType="com.example.mc.TECH_ACCOUNT"
+    android:icon="@drawable/money_bag"
+    android:smallIcon="@drawable/money_bag"
+    android:label="@string/authenticator_service_label" />
+    <!--android:accountPreferences="@xml/prefs"/>-->
