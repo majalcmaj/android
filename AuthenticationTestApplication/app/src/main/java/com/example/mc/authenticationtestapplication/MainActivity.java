@@ -5,6 +5,7 @@ import android.accounts.AccountManager;
 import android.accounts.AccountManagerCallback;
 import android.accounts.AccountManagerFuture;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -12,6 +13,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.widget.Toast;
+
+import com.example.mc.authenticationtestapplication.remote.ServerConnectorService;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -22,24 +25,16 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+    }
 
+    @Override
+    protected void onStart() {
+        super.onStart();
         AccountManager am = AccountManager.get(this);
         Account[] accounts =am.getAccountsByType(LoginActivity.ACCOUNT_TYPE);
         if(accounts.length == 0) {
             Intent intent = new Intent(this, LoginActivity.class);
             startActivityForResult(intent, LOGIN_REQUEST_CODE);
-            am.addAccount(LoginActivity.ACCOUNT_TYPE, LoginActivity.READ_ONLY_TOKEN_TYPE, null, null, this, new AccountManagerCallback<Bundle>() {
-                @Override
-                public void run(AccountManagerFuture<Bundle> future) {
-                    try {
-                        Bundle bnd = future.getResult();
-                        Toast.makeText(MainActivity.this, "Bundle: " + bnd.toString(), Toast.LENGTH_SHORT).show();
-
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }
-            }, null);
         }else {
             getExistingAccountAuthToken(accounts[0], LoginActivity.READ_ONLY_TOKEN_TYPE);
         }
@@ -57,11 +52,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if(requestCode == LOGIN_REQUEST_CODE) {
-            if(resultCode == RESULT_OK) {
-                AccountManager am = AccountManager.get(this);
-                Account[] accounts =  am.getAccountsByType(LoginActivity.ACCOUNT_TYPE);
-                getExistingAccountAuthToken(accounts[0], LoginActivity.READ_ONLY_TOKEN_TYPE);
-            }else {
+            if(resultCode != RESULT_OK) {
                 finish();
             }
         }
@@ -71,18 +62,25 @@ public class MainActivity extends AppCompatActivity {
         AccountManager am = AccountManager.get(this);
         final AccountManagerFuture<Bundle> future = am.getAuthToken(account, authTokenType, null, this, null, null);
 
-        new Thread(new Runnable() {
+        new AsyncTask<Void,Void,Integer>() {
             @Override
-            public void run() {
+            protected Integer doInBackground(Void... voids) {
                 try {
                     Bundle bnd = future.getResult();
-
                     final String authtoken = bnd.getString(AccountManager.KEY_AUTHTOKEN);
-                    Toast.makeText(MainActivity.this, ((authtoken != null) ? "SUCCESS!\ntoken: " + authtoken : "FAIL"), Toast.LENGTH_SHORT).show();
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(MainActivity.this, ((authtoken != null) ? "SUCCESS!\ntoken: " + authtoken : "FAIL"), Toast.LENGTH_SHORT).show();
+                        }
+                    });
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
+                return 0;
             }
-        }).start();
+        }.execute((Void)null);
     }
+
+
 }

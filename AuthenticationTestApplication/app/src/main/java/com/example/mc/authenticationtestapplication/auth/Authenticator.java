@@ -60,7 +60,7 @@ public class Authenticator extends AbstractAccountAuthenticator {
             final String password = am.getPassword(account);
             if (password != null) {
                 ServerConnectorService.Connector conn = ServerConnectorService.getConnector(context);
-                authToken = conn.authenticateUser(account.name, password);
+                conn.authenticateUser(account.name, password);
                 conn.unbind();
             }
         }
